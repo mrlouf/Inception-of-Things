@@ -1,0 +1,23 @@
+Vagrant.configure("2") do |config|
+  config.vm.box_check_update = false
+
+  #App server
+  config.vm.define "app" do |app|
+    app.vm.hostname = "appserver.srg.com"
+    app.vm.box = "centos/8"
+    app.vm.network :private_network, ip: "10.0.0.101"
+  end
+
+  #DB server
+  config.vm.define "db" do |db|
+    db.vm.hostname = "dbserver.srg.com"
+    db.vm.box = "centos/8"
+    db.vm.network :private_network, ip: "10.0.0.102"
+  end
+
+  config.vm.provider "virtualbox" do |vb|
+     vb.gui = false
+     vb.memory = "512"
+     vb.cpus = 1
+  end
+end
