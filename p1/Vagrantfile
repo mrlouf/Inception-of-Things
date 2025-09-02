@@ -1,18 +1,23 @@
+$script = <<-'SCRIPT'
+curl -sfL https://get.k3s.io | sh -
+SCRIPT
+
 Vagrant.configure("2") do |config|
   config.vm.box_check_update = false
+  config.vm.box = "generic/centos7"
 
-  #App server
-  config.vm.define "app" do |app|
-    app.vm.hostname = "appserver.srg.com"
-    app.vm.box = "centos/7"
-    app.vm.network :private_network, ip: "10.0.0.101"
+  #Server
+  config.vm.define "server" do |server|
+    server.vm.hostname = "nponchonS"
+    server.vm.network :private_network, ip: "192.168.56.110"
+    config.vm.provision "shell",
+        inline: $script
   end
 
-  #DB server
-  config.vm.define "db" do |db|
-    db.vm.hostname = "dbserver.srg.com"
-    db.vm.box = "centos/7"
-    db.vm.network :private_network, ip: "10.0.0.102"
+  #ServiceWorker
+  config.vm.define "serverWorker" do |serverWorker|
+    serverWorker.vm.hostname = "nponchonSW"
+    serverWorker.vm.network :private_network, ip: "192.168.56.111"
   end
 
   config.vm.provider "virtualbox" do |vb|
