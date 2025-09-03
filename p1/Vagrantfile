@@ -1,28 +1,24 @@
-$script = <<-'SCRIPT'
-curl -sfL https://get.k3s.io | sh -
-SCRIPT
-
 Vagrant.configure("2") do |config|
-  config.vm.box_check_update = false
-  config.vm.box = "generic/centos7"
-
-  #Server
   config.vm.define "server" do |server|
+    server.vm.box = "bento/rockylinux-9"
     server.vm.hostname = "nponchonS"
-    server.vm.network :private_network, ip: "192.168.56.110"
-    config.vm.provision "shell",
-        inline: $script
+    server.vm.network :public_network, ip: "192.168.56.110"
+    server.vm.provision "shell", inline: <<-SCRIPT
+      curl -sfL https://get.k3s.io | sh -
+      sleep 5
+      sudo cat /var/lib/rancher/k3s/server/node-token >/vagrant/node-token
+    SCRIPT
   end
 
-  #ServiceWorker
   config.vm.define "serverWorker" do |serverWorker|
+    serverWorker.vm.box = "bento/rockylinux-9"
     serverWorker.vm.hostname = "nponchonSW"
-    serverWorker.vm.network :private_network, ip: "192.168.56.111"
-  end
-
-  config.vm.provider "virtualbox" do |vb|
-     vb.gui = false
-     vb.memory = "512"
-     vb.cpus = 1
+    serverWorker.vm.network :public_network, ip: "192.168.56.111"
+    serverWorker.vm.provision "shell", inline: <<-SCRIPT
+        while [ ! -f /vagrant/node-token ]; do sleep 2; done
+        export K3S_URL="https://192.168.56.110:6443"
+        export K3S_TOKEN=$(cat /vagrant/node-token)
+        curl -sfL https://get.k3s.io | sh -
+      SCRIPT
   end
 end
