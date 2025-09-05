@@ -1,14 +1,14 @@
 Vagrant.configure("2") do |config|
   config.vm.define "nponchonS" do |server|
-    server.vm.box = "bento/rockylinux-9"
+    server.vm.box = "bento/ubuntu-22.04"
     server.vm.hostname = "nponchonS"
     server.vm.network :private_network, ip: "192.168.56.110"
     server.vm.provider "virtualbox" do |vb|
-      vb.memory = 512
+      vb.memory = 1024
       vb.cpus = 1
     end
     server.vm.provision "shell", inline: <<-SCRIPT
-      curl -sfL https://get.k3s.io | sh -
+      curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="--tls-san 192.168.56.110 --node-ip 192.168.56.110 --node-external-ip 192.168.56.110 --disable traefik --disable servicelb --disable metrics-server --disable local-storage" sh -
       sleep 5
       sudo cat /var/lib/rancher/k3s/server/node-token >/vagrant/node-token
 
@@ -22,24 +22,24 @@ Vagrant.configure("2") do |config|
       # Replace server IP in kubeconfig
       sudo sed -i 's/127.0.0.1/192.168.56.110/g' /home/vagrant/.kube/config
       sudo sed -i 's/127.0.0.1/192.168.56.110/g' /vagrant/k3s.yaml
-      sudo firewall-cmd --add-port=6443/tcp --permanent
-      sudo firewall-cmd --reload
+      sudo ufw allow 6443/tcp
+      sudo ufw reload
     SCRIPT
   end
 
   config.vm.define "nponchonSW" do |serverWorker|
-    serverWorker.vm.box = "bento/rockylinux-9"
+    serverWorker.vm.box = "bento/ubuntu-22.04"
     serverWorker.vm.hostname = "nponchonSW"
     serverWorker.vm.network :private_network, ip: "192.168.56.111"
     serverWorker.vm.provider "virtualbox" do |vb|
-      vb.memory = 512
+      vb.memory = 1024
       vb.cpus = 1
     end
     serverWorker.vm.provision "shell", inline: <<-SCRIPT
       while [ ! -f /vagrant/node-token ]; do sleep 2; done
       export K3S_URL="https://192.168.56.110:6443"
       export K3S_TOKEN=$(cat /vagrant/node-token)
-      curl -sfL https://get.k3s.io | sh -
+      curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="--node-ip 192.168.56.111 --node-external-ip 192.168.56.111" sh -
 
       sudo mkdir -p /home/vagrant/.kube
       sudo cp /vagrant/k3s.yaml /home/vagrant/.kube/config
