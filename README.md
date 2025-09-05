@@ -33,6 +33,6 @@ The command `ip a` gives us the confirmation that the IP range is being used by 
 >        valid_lft forever preferred_lft forever<br>
 > [...]<br>
 
-You can run `docker network ls` to check whether Docker is using the network or not, and then remove it with `docker netowrk rm <network>`.
+You can run `docker network ls` to check whether Docker is using the network or not, and then remove it with `docker network rm br-d2c21f32a5cf`.
 Another way to clear the IP range is to use the command `sudo ip link delete <network>`
 
