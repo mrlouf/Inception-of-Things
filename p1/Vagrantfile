@@ -1,23 +1,52 @@
 Vagrant.configure("2") do |config|
-  config.vm.box_check_update = false
+  config.vm.define "nponchonS" do |server|
+    server.vm.box = "bento/ubuntu-24.04"
+    server.vm.hostname = "nponchonS"
+    server.vm.network :private_network, ip: "192.168.56.110"
+    server.vm.provider "virtualbox" do |vb|
+      vb.memory = 1024
+      vb.cpus = 1
+    end
+    server.vm.provision "shell", inline: <<-SCRIPT
+      curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="--tls-san 192.168.56.110 --node-ip 192.168.56.110 --node-external-ip 192.168.56.110 --disable traefik --disable servicelb --disable metrics-server --disable local-storage" sh -
+      sleep 5
+      sudo cat /var/lib/rancher/k3s/server/node-token >/vagrant/node-token
 
-  #App server
-  config.vm.define "app" do |app|
-    app.vm.hostname = "appserver.srg.com"
-    app.vm.box = "centos/8"
-    app.vm.network :private_network, ip: "10.0.0.101"
+      # Setup kubeconfig for vagrant user
+      sudo mkdir -p /home/vagrant/.kube
+      sudo cp /etc/rancher/k3s/k3s.yaml /home/vagrant/.kube/config
+      sudo cp /etc/rancher/k3s/k3s.yaml /vagrant/k3s.yaml
+      sudo chown vagrant:vagrant /home/vagrant/.kube/config
+      sudo chown vagrant:vagrant /vagrant/k3s.yaml
+
+      # Replace server IP in kubeconfig
+      sudo sed -i 's/127.0.0.1/192.168.56.110/g' /home/vagrant/.kube/config
+      sudo sed -i 's/127.0.0.1/192.168.56.110/g' /vagrant/k3s.yaml
+      sudo ufw allow 6443/tcp
+      sudo ufw reload
+    SCRIPT
   end
 
-  #DB server
-  config.vm.define "db" do |db|
-    db.vm.hostname = "dbserver.srg.com"
-    db.vm.box = "centos/8"
-    db.vm.network :private_network, ip: "10.0.0.102"
-  end
+  config.vm.define "nponchonSW" do |serverWorker|
+    serverWorker.vm.box = "bento/ubuntu-24.04"
+    serverWorker.vm.hostname = "nponchonSW"
+    serverWorker.vm.network :private_network, ip: "192.168.56.111"
+    serverWorker.vm.provider "virtualbox" do |vb|
+      vb.memory = 1024
+      vb.cpus = 1
+    end
+    serverWorker.vm.provision "shell", inline: <<-SCRIPT
+      while [ ! -f /vagrant/node-token ]; do sleep 2; done
+      export K3S_URL="https://192.168.56.110:6443"
+      export K3S_TOKEN=$(cat /vagrant/node-token)
+      curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="--node-ip 192.168.56.111 --node-external-ip 192.168.56.111" sh -
 
-  config.vm.provider "virtualbox" do |vb|
-     vb.gui = false
-     vb.memory = "512"
-     vb.cpus = 1
+      sudo mkdir -p /home/vagrant/.kube
+      sudo cp /vagrant/k3s.yaml /home/vagrant/.kube/config
+      sudo chown vagrant:vagrant /home/vagrant/.kube/config
+
+      # Replace server IP in kubeconfig
+      sudo sed -i 's/127.0.0.1/192.168.56.110/g' /home/vagrant/.kube/config
+    SCRIPT
   end
 end
