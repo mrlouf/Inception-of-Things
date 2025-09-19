@@ -1,0 +1,67 @@
+# Deployment for Apache (App 2)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: apache-deployment
+spec:
+  replicas: 3 # <- This fulfills the replica requirement for App 2
+  selector:
+    matchLabels:
+      app: apache
+  template:
+    metadata:
+      labels:
+        app: apache
+    spec:
+      containers:
+      - name: apache
+        image: httpd:alpine
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: apache-html
+          mountPath: /usr/local/apache2/htdocs
+      volumes:
+      - name: apache-html
+        configMap:
+          name: apache-html-config
+---
+# ConfigMap for Apache HTML content
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: apache-html-config
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>App 2 - Apache</title>
+        <style>
+            body { font-family: Arial, sans-serif; background-color: #ffe4e1; text-align: center; padding: 50px; }
+            h1 { color: #dc143c; }
+        </style>
+    </head>
+    <body>
+        <h1>Welcome to App 2!</h1>
+        <p>This is the Apache application (app2.com)</p>
+        <p>Running with 3 replicas on K3s cluster</p>
+        <p>Hostname: <span id="hostname"></span></p>
+        <script>
+            document.getElementById('hostname').textContent = window.location.hostname;
+        </script>
+    </body>
+    </html>
+---
+# Service for Apache
+apiVersion: v1
+kind: Service
+metadata:
+  name: apache-service
+spec:
+  selector:
+    app: apache
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
