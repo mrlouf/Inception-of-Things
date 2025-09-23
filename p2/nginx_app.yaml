@@ -1,0 +1,63 @@
+# Deployment for Nginx (APP 1)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:alpine
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: nginx-html
+          mountPath: /usr/share/nginx/html
+      volumes:
+      - name: nginx-html
+        configMap:
+          name: nginx-html-config
+---
+# ConfigMap for Nginx HTML content
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-html-config
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>App 1 - Nginx</title>
+        <style>
+            body { font-family: Arial, sans-serif; background-color: #f0f8ff; text-align: center; padding: 50px; }
+            h1 { color: #0066cc; }
+        </style>
+    </head>
+    <body>
+        <h1>Welcome to App 1!</h1>
+        <p>This is the Nginx application (app1.com)</p>
+        <p>Running on K3s cluster</p>
+    </body>
+    </html>
+---
+# Service for Nginx
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-service
+spec:
+  selector:
+    app: nginx
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80

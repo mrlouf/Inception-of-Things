@@ -1,0 +1,64 @@
+# Deployment for the default app (App 3)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: default-app-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: default-app
+  template:
+    metadata:
+      labels:
+        app: default-app
+    spec:
+      containers:
+      - name: nginx-default
+        image: nginx:alpine
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: default-html
+          mountPath: /usr/share/nginx/html
+      volumes:
+      - name: default-html
+        configMap:
+          name: default-html-config
+---
+# ConfigMap for Default app HTML content
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: default-html-config
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Default App - App 3</title>
+        <style>
+            body { font-family: Arial, sans-serif; background-color: #f0fff0; text-align: center; padding: 50px; }
+            h1 { color: #228b22; }
+        </style>
+    </head>
+    <body>
+        <h1>Welcome to the Default Application!</h1>
+        <p>This is App 3 - the default fallback application</p>
+        <p>You are seeing this because your HOST header doesn't match app1.com or app2.com</p>
+        <p>Running on K3s cluster</p>
+    </body>
+    </html>
+---
+# Service for the default app
+apiVersion: v1
+kind: Service
+metadata:
+  name: default-app-service
+spec:
+  selector:
+    app: default-app
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
