@@ -37,7 +37,7 @@ kubectl get nodes -o wide
 
 # Install ArgoCD CLI
 echo "Installing ArgoCD CLI..."
-kubectl create namespace argocd -dry-run=client -o yaml | kubectl apply -f -
+kubectl create namespace argocd --dry-run=client -o yaml | kubectl apply -f -
 kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
 
 echo "Waiting for Argo CD admin secret..."
