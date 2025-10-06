@@ -46,7 +46,7 @@ until kubectl -n argocd get secret argocd-initial-admin-secret &> /dev/null; do
 done
 
 kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d; echo
-kubectl port-forward svc/argocd-server -n argocd 8080:443 &
+kubectl port-forward svc/argocd-server -n argocd 8081:443 &
 
 
 VERSION=$(curl -s https://api.github.com/repos/argoproj/argo-cd/releases/latest | grep tag_name | cut -d '"' -f 4)
@@ -54,8 +54,10 @@ curl -sSL -o argocd "https://github.com/argoproj/argo-cd/releases/download/${VER
 chmod +x argocd
 sudo mv argocd /usr/local/bin/
 
-# Install wil42's image from Docker Hub
-echo "Installing wil42's image from Docker Hub..."
+# Deploy the application using ArgoCD
+echo "Deploying application using ArgoCD..."
 kubectl create namespace dev --dry-run=client -o yaml | kubectl apply -f -
 kubectl apply -n dev -f https://raw.githubusercontent.com/mrlouf/nponchon-IoT/main/deployment.yaml
 kubectl apply -f argocd-myapp.yaml
+kubectl port-forward svc/myapp-service -n dev 8888:8888 &
+echo "You can access the application at http://localhost:8888"
