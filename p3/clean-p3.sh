@@ -1,6 +1,10 @@
 k3d cluster delete mycluster
 k3d cluster list
 k3d cluster delete --all
+rm -f ~/.kube/config
+
+kubectl delete namespace argocd --ignore-not-found
+sudo rm -f /usr/local/bin/argocd
 
 docker ps -a | grep k3d | awk '{print $1}' | xargs -r docker rm -f
 docker system prune -a -f --volumes

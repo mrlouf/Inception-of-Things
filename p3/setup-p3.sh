@@ -40,8 +40,8 @@ fi
 
 # Verify kubectl installation
 kubectl version --client
-k3d cluster create mycluster --agents 2 --wait
 export KUBECONFIG=$(k3d kubeconfig write mycluster)
+k3d cluster create mycluster --agents 2 --wait
 
 # Setup ArgoCD namespace and install CLI
 echo "Installing ArgoCD CLI..."
@@ -64,4 +64,4 @@ kubectl apply -n dev -f https://raw.githubusercontent.com/mrlouf/nponchon-IoT/ma
 kubectl apply -f argocd-myapp.yaml
 
 echo "You can access the application at http://localhost:8888"
-kubectl port-forward service/argocd-server -n argocd 8080:443
+nohup kubectl port-forward service/argocd-server -n argocd 8080:443 > portforward.log 2>&1 &

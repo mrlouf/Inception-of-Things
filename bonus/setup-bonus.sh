@@ -24,12 +24,12 @@ else
     echo "Docker already installed and running"
 fi
 
-# Install k3d
+#-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-#
+#                           Setting up k3d & kubectl                            #
+#-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-#
 echo "Starting k3d..."
 wget -q -O - https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash
 
-
-# Install kubectl
 if command -v kubectl &> /dev/null; then
     echo "kubectl is already installed"
 else
@@ -37,13 +37,15 @@ else
     curl -LO "https://dl.k8s.io/release/$(curl -sL https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
     sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
 fi
-
-# Verify kubectl installation
 kubectl version --client
-k3d cluster create mycluster --agents 2 --wait
+# Regenerate kubeconfig and export KUBECONFIG
+k3d kubeconfig write mycluster
 export KUBECONFIG=$(k3d kubeconfig write mycluster)
+k3d cluster create mycluster --agents 2 --wait
 
-# Setup ArgoCD namespace and install CLI
+#-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-#
+#                           Setting up ArgoCD                                   #
+#-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-#
 echo "Installing ArgoCD CLI..."
 kubectl create namespace argocd
 kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
@@ -64,3 +66,22 @@ kubectl apply -n dev -f https://raw.githubusercontent.com/mrlouf/nponchon-IoT/ma
 kubectl apply -f argocd-myapp.yaml
 
 echo "You can access the application at http://localhost:8888"
+nohup kubectl port-forward service/argocd-server -n argocd 8080:443 > portforward.log 2>&1 &
+
+#-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-#
+#                           Get Helm ready                                      #
+#-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-#
+sudo apt-get install curl gpg apt-transport-https --yes
+curl -fsSL https://packages.buildkite.com/helm-linux/helm-debian/gpgkey | gpg --dearmor | sudo tee /usr/share/keyrings/helm.gpg > /dev/null
+echo "deb [signed-by=/usr/share/keyrings/helm.gpg] https://packages.buildkite.com/helm-linux/helm-debian/any/ any main" | sudo tee /etc/apt/sources.list.d/helm-stable-debian.list
+sudo apt-get update
+sudo apt-get install helm
+
+# Add GitLab Helm repository
+helm repo add gitlab https://charts.gitlab.io/
+helm repo update
+# Create namespace for GitLab
+kubectl create namespace gitlab
+helm install my-gitlab gitlab/gitlab --namespace gitlab -f my-values.yaml
+helm status my-gitlab --namespace gitlab
+kubectl get pods -n gitlab
