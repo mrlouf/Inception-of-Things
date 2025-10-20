@@ -28,26 +28,29 @@ fi
 echo "Starting k3d..."
 wget -q -O - https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash
 
-k3d cluster create mycluster --agents 2
 
 # Install kubectl
-echo "Installing kubectl..."
-sudo apt-get install -y kubectl
-kubectl get nodes -o wide
+if command -v kubectl &> /dev/null; then
+    echo "kubectl is already installed"
+else
+    echo "kubectl not found, installing..."
+    curl -LO "https://dl.k8s.io/release/$(curl -sL https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+    sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+fi
 
-# Install ArgoCD CLI
+# Verify kubectl installation
+kubectl version --client
+k3d cluster create mycluster --agents 2 --wait
+export KUBECONFIG=$(k3d kubeconfig write mycluster)
+
+# Setup ArgoCD namespace and install CLI
 echo "Installing ArgoCD CLI..."
-kubectl create namespace argocd --dry-run=client -o yaml | kubectl apply -f -
+kubectl create namespace argocd
 kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
 
-echo "Waiting for Argo CD admin secret..."
-until kubectl -n argocd get secret argocd-initial-admin-secret &> /dev/null; do
-  sleep 2
-done
+sudo kubectl wait -n argocd --for=condition=Ready pods --all --timeout=300s
 
 kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d; echo
-kubectl port-forward svc/argocd-server -n argocd 8081:443 &
-
 
 VERSION=$(curl -s https://api.github.com/repos/argoproj/argo-cd/releases/latest | grep tag_name | cut -d '"' -f 4)
 curl -sSL -o argocd "https://github.com/argoproj/argo-cd/releases/download/${VERSION}/argocd-linux-amd64"
@@ -59,5 +62,5 @@ echo "Deploying application using ArgoCD..."
 kubectl create namespace dev --dry-run=client -o yaml | kubectl apply -f -
 kubectl apply -n dev -f https://raw.githubusercontent.com/mrlouf/nponchon-IoT/main/deployment.yaml
 kubectl apply -f argocd-myapp.yaml
-kubectl port-forward svc/myapp-service -n dev 8888:8888 &
+
 echo "You can access the application at http://localhost:8888"
