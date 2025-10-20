@@ -64,3 +64,4 @@ kubectl apply -n dev -f https://raw.githubusercontent.com/mrlouf/nponchon-IoT/ma
 kubectl apply -f argocd-myapp.yaml
 
 echo "You can access the application at http://localhost:8888"
+kubectl port-forward service/argocd-server -n argocd 8080:443
