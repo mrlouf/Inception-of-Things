@@ -86,7 +86,7 @@ helm repo add gitlab https://charts.gitlab.io/
 helm repo update
 # Create namespace for GitLab
 kubectl create namespace gitlab
-helm install my-gitlab gitlab/gitlab --namespace gitlab -f my-values.yaml
+helm install my-gitlab gitlab/gitlab --namespace gitlab -f gitlab-values.yaml
 helm status my-gitlab --namespace gitlab
 kubectl get pods -n gitlab
 GITLAB_ROOT_PASSWORD=$(kubectl get secret -n gitlab my-gitlab-gitlab-initial-root-password -ojsonpath='{.data.password}' | base64 --decode; echo)

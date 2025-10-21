@@ -5,7 +5,7 @@ metadata:
   namespace: argocd
   annotations:
     ingress.kubernetes.io/ssl-redirect: "false"
-    nginx.ingress.kubernetes.io/backend-protocol: "HTTP" # Force HTTP backend protocol since ArgoCD server is in insecure mode
+    ingress.kubernetes.io/backend-protocol: "HTTP" # Force HTTP backend protocol since ArgoCD server is in insecure mode
 spec:
   rules:
   - host: argocd.localhost
@@ -48,6 +48,7 @@ metadata:
   namespace: gitlab
   annotations:
     ingress.kubernetes.io/ssl-redirect: "false"
+    ingress.kubernetes.io/backend-protocol: "HTTP"
 spec:
   rules:
   - host: gitlab.localhost
@@ -59,4 +60,4 @@ spec:
           service:
             name: my-gitlab-webservice-default
             port:
-              number: 8080
+              number: 8181
