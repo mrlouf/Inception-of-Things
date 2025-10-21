@@ -66,7 +66,6 @@ kubectl apply -n dev -f https://raw.githubusercontent.com/mrlouf/nponchon-IoT/ma
 kubectl apply -f argocd-myapp.yaml
 
 echo "You can access the application at http://localhost:8888"
-nohup kubectl port-forward service/argocd-server -n argocd 8080:443 > portforward.log 2>&1 &
 
 #-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-#
 #                           Get Helm ready                                      #
@@ -74,7 +73,6 @@ nohup kubectl port-forward service/argocd-server -n argocd 8080:443 > portforwar
 sudo apt-get install curl gpg apt-transport-https --yes
 curl -fsSL https://packages.buildkite.com/helm-linux/helm-debian/gpgkey | gpg --dearmor | sudo tee /usr/share/keyrings/helm.gpg > /dev/null
 echo "deb [signed-by=/usr/share/keyrings/helm.gpg] https://packages.buildkite.com/helm-linux/helm-debian/any/ any main" | sudo tee /etc/apt/sources.list.d/helm-stable-debian.list
-sudo apt-get update
 sudo apt-get install helm
 
 # Add GitLab Helm repository
@@ -85,3 +83,8 @@ kubectl create namespace gitlab
 helm install my-gitlab gitlab/gitlab --namespace gitlab -f my-values.yaml
 helm status my-gitlab --namespace gitlab
 kubectl get pods -n gitlab
+echo "Setup complete, starting port-forwarding to GitLab..."
+
+# Apply your Ingress rules (after services are ready)
+kubectl apply -f /path/to/your/ingress.yaml
+echo "Ingress rules applied. You can now access your apps via the configured hostnames."

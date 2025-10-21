@@ -28,7 +28,6 @@ fi
 echo "Starting k3d..."
 wget -q -O - https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash
 
-
 # Install kubectl
 if command -v kubectl &> /dev/null; then
     echo "kubectl is already installed"
@@ -38,30 +37,43 @@ else
     sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
 fi
 
-# Verify kubectl installation
-kubectl version --client
+k3d cluster create mycluster --agents 2 --wait --port 80:80@loadbalancer --port 443:443@loadbalancer
 export KUBECONFIG=$(k3d kubeconfig write mycluster)
-k3d cluster create mycluster --agents 2 --wait
 
 # Setup ArgoCD namespace and install CLI
-echo "Installing ArgoCD CLI..."
+echo -e "\e[34mInstalling ArgoCD...\e[0m"
 kubectl create namespace argocd
 kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
 
-sudo kubectl wait -n argocd --for=condition=Ready pods --all --timeout=300s
+echo -e "\e[33mWaiting for ArgoCD pods to be ready...\e[0m"
+kubectl wait -n argocd --for=condition=Ready pods --all --timeout=300s
 
-kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d; echo
+# Patch ArgoCD server to run in insecure mode
+kubectl patch deployment argocd-server -n argocd --type='json' -p='[{"op": "add", "path": "/spec/template/spec/containers/0/args/-", "value": "--insecure"}]'
+kubectl rollout status deployment/argocd-server -n argocd
 
+ARGOCD_PASSWORD=$(kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d)
+
+# Install ArgoCD CLI
+echo -e "\e[34mInstalling ArgoCD CLI...\e[0m"
 VERSION=$(curl -s https://api.github.com/repos/argoproj/argo-cd/releases/latest | grep tag_name | cut -d '"' -f 4)
 curl -sSL -o argocd "https://github.com/argoproj/argo-cd/releases/download/${VERSION}/argocd-linux-amd64"
 chmod +x argocd
 sudo mv argocd /usr/local/bin/
 
 # Deploy the application using ArgoCD
-echo "Deploying application using ArgoCD..."
+echo -e "\e[34mDeploying application using ArgoCD...\e[0m"
 kubectl create namespace dev --dry-run=client -o yaml | kubectl apply -f -
 kubectl apply -n dev -f https://raw.githubusercontent.com/mrlouf/nponchon-IoT/main/deployment.yaml
 kubectl apply -f argocd-myapp.yaml
 
-echo "You can access the application at http://localhost:8888"
-nohup kubectl port-forward service/argocd-server -n argocd 8080:443 > portforward.log 2>&1 &
+# Apply Ingress configurations
+echo -e "\e[34mApplying Ingress configurations...\e[0m"
+kubectl apply -f ingress.yaml
+
+echo -e "\e[32m============================================\e[0m"
+echo -e "\e[32mApplication: \e[1mhttp://myapp.localhost\e[0m"
+echo -e "\e[32mArgoCD UI:   \e[1mhttp://argocd.localhost\e[0m"
+echo -e "\e[32m  Username: admin\e[0m"
+echo -e "\e[32m  Password: $ARGOCD_PASSWORD\e[0m"
+echo -e "\e[32m============================================\e[0m"
