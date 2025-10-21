@@ -1,6 +1,4 @@
-k3d cluster delete mycluster
-k3d cluster list
-k3d cluster delete --all
+k3d cluster delete mycluster --ignore-not-found
 rm -f ~/.kube/config
 
 kubectl delete namespace argocd --ignore-not-found

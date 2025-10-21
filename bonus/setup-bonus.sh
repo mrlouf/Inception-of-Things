@@ -24,12 +24,14 @@ else
     echo "Docker already installed and running"
 fi
 
-#-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-#
-#                           Setting up k3d & kubectl                            #
-#-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-#
+#~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=#
+#                   Setup k3d                      #
+#~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=#
+# Install k3d
 echo "Starting k3d..."
 wget -q -O - https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash
 
+# Install kubectl
 if command -v kubectl &> /dev/null; then
     echo "kubectl is already installed"
 else
@@ -37,39 +39,43 @@ else
     curl -LO "https://dl.k8s.io/release/$(curl -sL https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
     sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
 fi
-kubectl version --client
-# Regenerate kubeconfig and export KUBECONFIG
-k3d kubeconfig write mycluster
-export KUBECONFIG=$(k3d kubeconfig write mycluster)
-k3d cluster create mycluster --agents 2 --wait
 
-#-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-#
-#                           Setting up ArgoCD                                   #
-#-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-#
-echo "Installing ArgoCD CLI..."
+k3d cluster create mycluster --agents 2 --wait --port 80:80@loadbalancer --port 443:443@loadbalancer --port 8080:8080@loadbalancer
+export KUBECONFIG=$(k3d kubeconfig write mycluster)
+
+# Setup ArgoCD namespace and install CLI
+echo -e "\e[34mInstalling ArgoCD...\e[0m"
 kubectl create namespace argocd
 kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
 
-sudo kubectl wait -n argocd --for=condition=Ready pods --all --timeout=300s
+echo -e "\e[33mWaiting for ArgoCD pods to be ready...\e[0m"
+kubectl wait -n argocd --for=condition=Ready pods --all --timeout=300s
 
-kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d; echo
+# Patch ArgoCD server to run in insecure mode
+kubectl patch deployment argocd-server -n argocd --type='json' -p='[{"op": "add", "path": "/spec/template/spec/containers/0/args/-", "value": "--insecure"}]'
+kubectl rollout status deployment/argocd-server -n argocd
 
+ARGOCD_PASSWORD=$(kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d)
+
+#~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=#
+#                   Install ArgoCD                 #
+#~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=#
+# Install ArgoCD CLI
+echo -e "\e[34mInstalling ArgoCD CLI...\e[0m"
 VERSION=$(curl -s https://api.github.com/repos/argoproj/argo-cd/releases/latest | grep tag_name | cut -d '"' -f 4)
 curl -sSL -o argocd "https://github.com/argoproj/argo-cd/releases/download/${VERSION}/argocd-linux-amd64"
 chmod +x argocd
 sudo mv argocd /usr/local/bin/
 
 # Deploy the application using ArgoCD
-echo "Deploying application using ArgoCD..."
+echo -e "\e[34mDeploying application using ArgoCD...\e[0m"
 kubectl create namespace dev --dry-run=client -o yaml | kubectl apply -f -
 kubectl apply -n dev -f https://raw.githubusercontent.com/mrlouf/nponchon-IoT/main/deployment.yaml
 kubectl apply -f argocd-myapp.yaml
 
-echo "You can access the application at http://localhost:8888"
-
-#-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-#
-#                           Get Helm ready                                      #
-#-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-#
+#~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=#
+#                   Install Helm                   #
+#~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=#
 sudo apt-get install curl gpg apt-transport-https --yes
 curl -fsSL https://packages.buildkite.com/helm-linux/helm-debian/gpgkey | gpg --dearmor | sudo tee /usr/share/keyrings/helm.gpg > /dev/null
 echo "deb [signed-by=/usr/share/keyrings/helm.gpg] https://packages.buildkite.com/helm-linux/helm-debian/any/ any main" | sudo tee /etc/apt/sources.list.d/helm-stable-debian.list
@@ -83,8 +89,22 @@ kubectl create namespace gitlab
 helm install my-gitlab gitlab/gitlab --namespace gitlab -f my-values.yaml
 helm status my-gitlab --namespace gitlab
 kubectl get pods -n gitlab
-echo "Setup complete, starting port-forwarding to GitLab..."
+GITLAB_ROOT_PASSWORD=$(kubectl get secret -n gitlab my-gitlab-gitlab-initial-root-password -ojsonpath='{.data.password}' | base64 --decode; echo)
 
-# Apply your Ingress rules (after services are ready)
-kubectl apply -f /path/to/your/ingress.yaml
-echo "Ingress rules applied. You can now access your apps via the configured hostnames."
+# Apply Ingress configurations
+echo -e "\e[34mApplying Ingress configurations...\e[0m"
+kubectl apply -f ingress.yaml
+
+echo -e "\e[32m============================================\e[0m"
+echo -e "\e[32mApplication: \e[1mhttp://myapp.localhost\e[0m"
+echo -e "\e[32mArgoCD UI:   \e[1mhttp://argocd.localhost\e[0m"
+echo -e "\e[32mGitLab UI:   \e[1mhttp://gitlab.localhost\e[0m"
+echo -e "\e[32m--------------------------------------------\e[0m"
+echo -e "\e[32mArgoCD Initial Admin Credentials:\e[0m"
+echo -e "\e[32m  Username: admin\e[0m"
+echo -e "\e[32m  Password: $ARGOCD_PASSWORD\e[0m"
+echo -e "\e[32m--------------------------------------------\e[0m"
+echo -e "\e[32mGitLab Initial Root Credentials:\e[0m"
+echo -e "\e[32m  Username: root\e[0m"
+echo -e "\e[32m  Password: $GITLAB_ROOT_PASSWORD\e[0m"
+echo -e "\e[32m============================================\e[0m"
