@@ -6,7 +6,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/mrlouf/nponchon-IoT.git
+    repoURL: http://my-gitlab-webservice-default.gitlab.svc.cluster.local:8080/root/nponchon-iot.git
     targetRevision: main
     path: .
   destination:

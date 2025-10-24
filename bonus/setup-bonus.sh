@@ -40,7 +40,13 @@ else
     sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
 fi
 
-k3d cluster create mycluster --agents 2 --wait --port 80:80@loadbalancer --port 443:443@loadbalancer --port 8080:8080@loadbalancer
+# create a k3d cluster and map ports
+k3d cluster create mycluster --agents 2 --wait \
+    --port 80:80@loadbalancer \
+    --port 443:443@loadbalancer \
+    --port 8080:8080@loadbalancer \
+    --port 2222:2222@loadbalancer
+# set the kubeconfig context
 export KUBECONFIG=$(k3d kubeconfig write mycluster)
 
 # Setup ArgoCD namespace and install CLI
@@ -76,6 +82,7 @@ kubectl apply -f argocd-myapp.yaml
 #~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=#
 #                   Install Helm                   #
 #~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=#
+# Install Helm - TODO: check for distribution and adapt
 sudo apt-get install curl gpg apt-transport-https --yes
 curl -fsSL https://packages.buildkite.com/helm-linux/helm-debian/gpgkey | gpg --dearmor | sudo tee /usr/share/keyrings/helm.gpg > /dev/null
 echo "deb [signed-by=/usr/share/keyrings/helm.gpg] https://packages.buildkite.com/helm-linux/helm-debian/any/ any main" | sudo tee /etc/apt/sources.list.d/helm-stable-debian.list
@@ -98,7 +105,7 @@ kubectl apply -f ingress.yaml
 echo -e "\e[32m============================================\e[0m"
 echo -e "\e[32mApplication: \e[1mhttp://myapp.localhost\e[0m"
 echo -e "\e[32mArgoCD UI:   \e[1mhttp://argocd.localhost\e[0m"
-echo -e "\e[32mGitLab UI:   \e[1mhttp://gitlab.localhost\e[0m"
+echo -e "\e[32mGitLab UI:   \e[1mhttps://gitlab.localhost\e[0m"
 echo -e "\e[32m--------------------------------------------\e[0m"
 echo -e "\e[32mArgoCD Initial Admin Credentials:\e[0m"
 echo -e "\e[32m  Username: admin\e[0m"

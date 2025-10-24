@@ -10,6 +10,10 @@ gitlab:
   webservice:
     ingress:
       enabled: false
+  gitlab-shell:
+    service:
+      type: NodePort
+      nodePort: 2222
 
 gitlab-rails:
   extraEnv:
