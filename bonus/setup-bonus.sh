@@ -38,6 +38,7 @@ else
     echo "kubectl not found, installing..."
     curl -LO "https://dl.k8s.io/release/$(curl -sL https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
     sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+    rm kubectl
 fi
 
 # create a k3d cluster and map ports
@@ -128,10 +129,9 @@ metadata:
     argocd.argoproj.io/secret-type: repository
 stringData:
   type: git
-  url: ssh://git@my-gitlab-gitlab-shell.gitlab.svc.cluster.local:22/root/nponchon-iot.git
-  sshPrivateKey: |
-$(cat "$SSH_KEY_PATH" | sed 's/^/    /')
-  insecure: "true"
+  url: http://my-gitlab-webservice-default.gitlab.svc.cluster.local:8181/root/nponchon-iot.git
+  username: root
+  password: $GITLAB_ROOT_PASSWORD
 EOF
 
 echo -e "\e[32m✓ ArgoCD repository credentials configured\e[0m"
