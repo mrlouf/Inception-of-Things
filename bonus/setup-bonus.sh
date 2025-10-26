@@ -61,8 +61,7 @@ kubectl wait -n argocd --for=condition=Ready pods --all --timeout=300s
 
 # Patch ArgoCD server to run in insecure mode (required for HTTP Ingress)
 echo -e "\e[34mConfiguring ArgoCD for HTTP Ingress...\e[0m"
-kubectl patch deployment argocd-server -n argocd --type='json' \
-  -p='[{"op":"add","path":"/spec/template/spec/containers/0/command/-","value":"--insecure"}]'
+kubectl patch deployment argocd-server -n argocd --type='json' -p='[{"op": "add", "path": "/spec/template/spec/containers/0/args/-", "value": "--insecure"}]'
 kubectl rollout status deployment/argocd-server -n argocd
 
 ARGOCD_PASSWORD=$(kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d)
