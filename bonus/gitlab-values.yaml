@@ -5,15 +5,61 @@ global:
     https: false
   ingress:
     enabled: false
+  resources:
+    limits:
+      memory: 2Gi
+      cpu: 1000m
+    requests:
+      memory: 512Mi
+      cpu: 200m
 
 gitlab:
   webservice:
+    minReplicas: 1
+    maxReplicas: 1
     ingress:
       enabled: false
+    resources:
+      limits:
+        memory: 1Gi
+        cpu: 500m
+      requests:
+        memory: 512Mi
+        cpu: 200m
+
   gitlab-shell:
+    minReplicas: 1
+    maxReplicas: 1
+    resources:
+      limits:
+        memory: 256Mi
+        cpu: 200m
+      requests:
+        memory: 128Mi
+        cpu: 50m
     service:
       type: NodePort
       nodePort: 2222
+
+  sidekiq:
+    minReplicas: 1
+    maxReplicas: 1
+    resources:
+      limits:
+        memory: 512Mi
+        cpu: 500m
+      requests:
+        memory: 256Mi
+        cpu: 100m
+
+  gitaly:
+    resources:
+      limits:
+        memory: 512Mi
+        cpu: 500m
+      requests:
+        memory: 256Mi
+        cpu: 100m
 
 gitlab-rails:
   extraEnv:
@@ -32,7 +78,24 @@ gitlab-rails:
 certmanager-issuer:
   email: nponchon@student.42barcelona.com
 
-# Disable components we don't need
+postgresql:
+  resources:
+    limits:
+      memory: 512Mi
+      cpu: 500m
+    requests:
+      memory: 256Mi
+      cpu: 100m
+
+redis:
+  resources:
+    limits:
+      memory: 256Mi
+      cpu: 200m
+    requests:
+      memory: 128Mi
+      cpu: 50m
+
 gitlab-runner:
   install: false
 
@@ -43,4 +106,19 @@ prometheus:
   install: false
 
 grafana:
+  enabled: false
+
+certmanager:
+  install: false
+
+nginx-ingress:
+  enabled: false
+
+gitlab-kas:
+  enabled: false
+
+gitlab-pages:
+  enabled: false
+
+gitlab-exporter:
   enabled: false
