@@ -141,7 +141,8 @@ echo -e "\e[32m✓ ArgoCD repository credentials configured\e[0m"
 #~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=#
 echo -e "\e[34mDeploying application using ArgoCD...\e[0m"
 kubectl create namespace dev --dry-run=client -o yaml | kubectl apply -f -
-kubectl apply -n dev -f https://raw.githubusercontent.com/mrlouf/nponchon-IoT/main/deployment.yaml
+# Stop AArgo from deploying from GitHub
+# kubectl apply -n dev -f https://raw.githubusercontent.com/mrlouf/nponchon-IoT/main/deployment.yaml
 
 # Apply ArgoCD application manifest (will fail initially until GitLab repo is configured)
 kubectl apply -f argocd-myapp.yaml
