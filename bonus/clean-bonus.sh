@@ -2,8 +2,6 @@ k3d cluster delete mycluster
 rm -f ~/.kube/config
 
 kubectl delete namespace argocd
-sudo rm -f /usr/local/bin/argocd
-sudo rm -f /usr/local/bin/kubectl
 sudo rm -f ~/.ssh/argocd-gitlab ~/.ssh/argocd-gitlab.pub
 
 docker ps -a | grep k3d | awk '{print $1}' | xargs -r docker rm -f

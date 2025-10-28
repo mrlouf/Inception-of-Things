@@ -15,16 +15,31 @@ global:
 
 gitlab:
   webservice:
+    livenessProbe:
+      initialDelaySeconds: 180
+      periodSeconds: 60
+      timeoutSeconds: 60
+      failureThreshold: 10
+    readinessProbe:
+      initialDelaySeconds: 120
+      periodSeconds: 30
+      timeoutSeconds: 30
+      failureThreshold: 10
+
+    workerProcesses: 1
+    puma:
+      workerMaxMemory: 400
     minReplicas: 1
     maxReplicas: 1
     ingress:
       enabled: false
+
     resources:
       limits:
-        memory: 1Gi
+        memory: 1.5Gi
         cpu: 500m
       requests:
-        memory: 512Mi
+        memory: 1Gi
         cpu: 200m
 
   gitlab-shell:
@@ -44,13 +59,14 @@ gitlab:
   sidekiq:
     minReplicas: 1
     maxReplicas: 1
-    resources:
-      limits:
-        memory: 512Mi
-        cpu: 500m
-      requests:
-        memory: 256Mi
-        cpu: 100m
+    pods:
+      - name: all-in-1
+        concurrency: 3
+        resources:
+          requests:
+            memory: 300Mi
+          limits:
+            memory: 600Mi
 
   gitaly:
     resources:
@@ -107,9 +123,6 @@ prometheus:
 
 grafana:
   enabled: false
-
-certmanager:
-  install: false
 
 nginx-ingress:
   enabled: false

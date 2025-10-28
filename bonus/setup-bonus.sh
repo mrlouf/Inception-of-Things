@@ -95,13 +95,17 @@ helm repo update
 
 # Create namespace for GitLab
 kubectl create namespace gitlab
-helm install my-gitlab gitlab/gitlab --namespace gitlab -f gitlab-values.yaml
+helm install my-gitlab gitlab/gitlab --namespace gitlab -f gitlab-values.yaml \
+	--set gitlab.sidekiq.enabled=false --wait --timeout=20m
+
+helm upgrade my-gitlab gitlab/gitlab --namespace gitlab -f gitlab-values.yaml \
+	--set gitlab.sidekiq.enabled=true --wait
 
 # Wait for GitLab to be ready
 echo -e "\e[33mWaiting for GitLab to be ready (this may take several minutes)...\e[0m"
 kubectl wait -n gitlab --for=condition=Ready pods -l app=webservice --timeout=600s
 
-GITLAB_ROOT_PASSWORD=$(kubectl get secret -n gitlab my-gitlab-gitlab-initial-root-password -ojsonpath='{.data.password}' | base64 --decode)
+GITLAB_ROOT_PASSWORD=$(kubectl get secret -n gitlab my-gitlab-gitlab-initial-root-password -ojsonpath='{.data.password}' | base64 -d)
 
 #~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=#
 #         Configure SSH Keys for ArgoCD->GitLab    #
