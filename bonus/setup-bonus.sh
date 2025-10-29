@@ -38,11 +38,11 @@ else
     echo "kubectl not found, installing..."
     curl -LO "https://dl.k8s.io/release/$(curl -sL https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
     sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
-    rm kubectl
+    rm kubect
 fi
 
 # create a k3d cluster and map ports
-k3d cluster create mycluster --agents 2 --wait \
+k3d cluster create mycluster --agents 1 --wait \
     --port 80:80@loadbalancer \
     --port 443:443@loadbalancer \
     --port 8080:8080@loadbalancer \
