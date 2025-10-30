@@ -60,7 +60,7 @@ kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/st
 echo -e "\e[33mWaiting for ArgoCD pods to be ready...\e[0m"
 kubectl wait -n argocd --for=condition=Ready pods --all --timeout=300s
 
-# Patch ArgoCD server to run in insecure mode (required for HTTP Ingress)
+# Patch ArgoCD server to run in insecure mode (required for HTTP Ingress), okay for local lab
 echo -e "\e[34mConfiguring ArgoCD for HTTP Ingress...\e[0m"
 kubectl patch deployment argocd-server -n argocd --type='json' -p='[{"op": "add", "path": "/spec/template/spec/containers/0/args/-", "value": "--insecure"}]'
 kubectl rollout status deployment/argocd-server -n argocd
@@ -95,10 +95,10 @@ helm repo update
 
 # Create namespace for GitLab
 kubectl create namespace gitlab
-helm install my-gitlab gitlab/gitlab --namespace gitlab -f gitlab-values.yaml \
+helm install my-gitlab gitlab/gitlab --namespace gitlab -f ./confs/gitlab-values.yaml \
 	--set gitlab.sidekiq.enabled=false --wait --timeout=20m
-
-helm upgrade my-gitlab gitlab/gitlab --namespace gitlab -f gitlab-values.yaml \
+# Wait for all pods to start before sidekiq (needs lot of RAM..)
+helm upgrade my-gitlab gitlab/gitlab --namespace gitlab -f ./confs/gitlab-values.yaml \
 	--set gitlab.sidekiq.enabled=true --wait
 
 # Wait for GitLab to be ready
@@ -149,13 +149,13 @@ kubectl create namespace dev --dry-run=client -o yaml | kubectl apply -f -
 # kubectl apply -n dev -f https://raw.githubusercontent.com/mrlouf/nponchon-IoT/main/deployment.yaml
 
 # Apply ArgoCD application manifest (will fail initially until GitLab repo is configured)
-kubectl apply -f argocd-myapp.yaml
+kubectl apply -f ./confs/argocd-myapp.yaml
 
 #~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=#
 #                 Apply Ingress Rules              #
 #~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=#
 echo -e "\e[34mApplying Ingress configurations...\e[0m"
-kubectl apply -f ingress.yaml
+kubectl apply -f ./confs/ingress.yaml
 
 #~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=#
 #                   Summary Output                 #
