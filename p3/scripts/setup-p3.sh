@@ -66,11 +66,11 @@ sudo mv argocd /usr/local/bin/
 echo -e "\e[34mDeploying application using ArgoCD...\e[0m"
 kubectl create namespace dev --dry-run=client -o yaml | kubectl apply -f -
 kubectl apply -n dev -f https://raw.githubusercontent.com/mrlouf/nponchon-IoT/main/deployment.yaml
-kubectl apply -f argocd-myapp.yaml
+kubectl apply -f ./confs/argocd-myapp.yaml
 
 # Apply Ingress configurations
 echo -e "\e[34mApplying Ingress configurations...\e[0m"
-kubectl apply -f ingress.yaml
+kubectl apply -f ./confs/ingress.yaml
 
 echo -e "\e[32m============================================\e[0m"
 echo -e "\e[32mApplication: \e[1mhttp://myapp.localhost\e[0m"
