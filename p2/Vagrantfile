@@ -41,13 +41,13 @@ Vagrant.configure("2") do |config|
 
       # Apply the Kubernetes manifests from the shared /vagrant directory
       cd /vagrant
-      sudo KUBECONFIG=/etc/rancher/k3s/k3s.yaml kubectl apply -f nginx_app.yaml
-      sudo KUBECONFIG=/etc/rancher/k3s/k3s.yaml kubectl apply -f apache_app.yaml
-      sudo KUBECONFIG=/etc/rancher/k3s/k3s.yaml kubectl apply -f default_app.yaml
+      sudo KUBECONFIG=/etc/rancher/k3s/k3s.yaml kubectl apply -f ./confs/nginx_app.yaml
+      sudo KUBECONFIG=/etc/rancher/k3s/k3s.yaml kubectl apply -f ./confs/apache_app.yaml
+      sudo KUBECONFIG=/etc/rancher/k3s/k3s.yaml kubectl apply -f ./confs/default_app.yaml
 
       # Wait for deployments to be ready before applying ingress
       sleep 30
-      sudo KUBECONFIG=/etc/rancher/k3s/k3s.yaml kubectl apply -f ingress.yaml
+      sudo KUBECONFIG=/etc/rancher/k3s/k3s.yaml kubectl apply -f ./confs/ingress.yaml
 
     SCRIPT
   end
