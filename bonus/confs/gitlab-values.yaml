@@ -1,0 +1,170 @@
+global:
+  time_zone: "Europe/Madrid"
+  hosts:
+    domain: localhost
+    https: false
+  ingress:
+    enabled: false
+  resources:
+    limits:
+      memory: 2Gi
+      cpu: 1000m
+    requests:
+      memory: 768Mi
+      cpu: 200m
+
+gitlab:
+  webservice:
+    service:
+      type: ClusterIP
+      port: 8181
+
+    livenessProbe:
+      initialDelaySeconds: 180
+      periodSeconds: 60
+      timeoutSeconds: 60
+      failureThreshold: 10
+    readinessProbe:
+      initialDelaySeconds: 120
+      periodSeconds: 30
+      timeoutSeconds: 30
+      failureThreshold: 10
+    startupProbe:
+      failureThreshold: 60
+      periodSeconds: 10
+      timeoutSeconds: 10
+
+    extraEnv:
+      GITLAB_SKIP_RAILS_BOOT: "false"
+      DISABLE_PROMETHEUS_METRICS: "true"
+      GITLAB_RAILS_RACK_TIMEOUT: "20"
+      GITLAB_RAILS_MAX_THREADS: "2"
+      RUBY_GC_HEAP_GROWTH_FACTOR: "1.05"
+      RUBY_GC_MALLOC_LIMIT: "60000000"
+      RUBY_GC_HEAP_INIT_SLOTS: "400000"
+      MALLOC_ARENA_MAX: "2"
+
+    workerProcesses: 1
+    puma:
+      threads:
+        min: 1
+        max: 2
+      workerMaxMemory: 500
+
+    minReplicas: 1
+    maxReplicas: 1
+    ingress:
+      enabled: false
+
+    resources:
+      limits:
+        memory: 3Gi
+        cpu: 1
+      requests:
+        memory: 1Gi
+        cpu: 500m
+
+  gitlab-shell:
+    minReplicas: 1
+    maxReplicas: 1
+    resources:
+      limits:
+        memory: 128Mi
+        cpu: 100m
+      requests:
+        memory: 64Mi
+        cpu: 50m
+    service:
+      type: ClusterIP
+      port: 22
+      #type: NodePort
+      #nodePort: 2222
+
+  sidekiq:
+    minReplicas: 1
+    maxReplicas: 1
+    concurrency: 1
+    resources:
+      requests:
+        memory: 128Mi
+        cpu: 50m
+      limits:
+        memory: 256Mi
+        cpu: 100m
+    extraEnv:
+      SIDEKIQ_CONCURRENCY: "1"
+      MALLOC_ARENA_MAX: "2"
+
+  gitaly:
+    resources:
+      limits:
+        memory: 192Mi
+        cpu: 200m
+      requests:
+        memory: 96Mi
+        cpu: 50m
+
+gitlab-rails:
+  extraEnv:
+    GITLAB_OMNIBUS_CONFIG: |
+      external_url 'http://gitlab.localhost'
+      gitlab_rails['trusted_proxies'] = ['10.0.0.0/8', '172.16.0.0/12', '192.168.0.0/16']
+      nginx['listen_port'] = 8080
+      nginx['listen_https'] = false
+      nginx['proxy_set_headers'] = {
+        'Host' => '$http_host',
+        'X-Real-IP' => '$remote_addr',
+        'X-Forwarded-For' => '$proxy_add_x_forwarded_for',
+        'X-Forwarded-Proto' => 'http'
+      }
+
+certmanager-issuer:
+  email: nponchon@student.42barcelona.com
+
+postgresql:
+  sharedBuffers: "32MB"
+  maxConnections: 30
+  resources:
+    limits:
+      memory: 512Mi
+      cpu: 500m
+    requests:
+      memory: 256Mi
+      cpu: 100m
+
+redis:
+  resources:
+    limits:
+      memory: 256Mi
+      cpu: 200m
+    requests:
+      memory: 128Mi
+      cpu: 50m
+
+gitlab-runner:
+  install: false
+
+registry:
+  enabled: false
+
+prometheus:
+  install: false
+
+grafana:
+  enabled: false
+
+nginx-ingress:
+  enabled: false
+
+gitlab-kas:
+  enabled: false
+
+gitlab-pages:
+  enabled: false
+
+gitlab-exporter:
+  enabled: false
+
+certmanager:
+  enabled: false
+
