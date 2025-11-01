@@ -6,7 +6,8 @@ This project aims at giving a small introduction to Kubernetes (k8s) by implemen
 ## What is Kubernetes?
 In simple terms, Kubernetes is an open-source platform designed to automate the deployment, scaling, and operation of application containers.
 If you are like me and analogies help you understand complex and abstract concepts, here's a good one: 
->> Here's an analogy: You can think of a container orchestrator (like Kubernetes ) as you would a conductor for an orchestra, says Dave Egts, chief technologist, North America Public Sector, Red Hat. “In the same way a conductor would say how many trumpets are needed, which ones play first trumpet, and how loud each should play," Egts explains, "a container orchestrator would say how many web server front end containers are needed, what they serve, and how many resources are to be dedicated to each one."
+>> Here's an analogy: You can think of a container orchestrator (like Kubernetes ) as you would a conductor for an orchestra, says Dave Egts, chief technologist, North America Public Sector, Red Hat. “In the same way a conductor would say how many trumpets are needed, which ones play first trumpet, and how loud each should play," Egts explains, "a container orchestrator would say how many web server front end containers are needed, what they serve, and how many resources are to be dedicated to each one."<br>
+
 (Quoted from this [article](https://www.redhat.com/en/topics/containers/what-is-kubernetes)).
 
 ## Prerequisites
