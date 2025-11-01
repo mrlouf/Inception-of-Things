@@ -3,6 +3,12 @@
 ## Overview
 This project aims at giving a small introduction to Kubernetes (k8s) by implementing a serie of micro-infrastructures using k3s, a lightweight Kubernetes distribution and k3d, a tool to run k3s in Docker containers. Each micro-infrastructure will be deployed inside a k3s cluster and will showcase different aspects of Kubernetes, such as deploying applications, configuring networking with Ingress, and managing resources with Helm with the ultimate goal of setting up a complete CI/CD pipeline.
 
+## What is Kubernetes?
+In simple terms, Kubernetes is an open-source platform designed to automate the deployment, scaling, and operation of application containers.
+If you are like me and analogies help you understand complex and abstract concepts, here's a good one: 
+>> Here's an analogy: You can think of a container orchestrator (like Kubernetes ) as you would a conductor for an orchestra, says Dave Egts, chief technologist, North America Public Sector, Red Hat. “In the same way a conductor would say how many trumpets are needed, which ones play first trumpet, and how loud each should play," Egts explains, "a container orchestrator would say how many web server front end containers are needed, what they serve, and how many resources are to be dedicated to each one."
+(Quoted from this [article](https://www.redhat.com/en/topics/containers/what-is-kubernetes)).
+
 ## Prerequisites
 P1 and P2 require Vagrant and VirtualBox to be installed on your machine:
 1. Install [VirtualBox](https://www.virtualbox.org/wiki/Downloads) on your machine.
@@ -16,28 +22,32 @@ P3 and the bonus part require Docker to be installed on your machine:
 
 
 
-P1:
+### P1:
 - This part focuses on setting up a simple k3s cluster using Vagrant with one Server node and one Agent node.
 - The subject requires to set a specific IP for each node and set them up in the right mode (Server/Agent).
 
-P2:
+### P2:
 - This part reuses the Server node from P1 and requires to create a cluster with 3 Agent nodes.
 - Consult the [Readme file](https://github.com/mrlouf/Inception-of-Things/tree/main/p2) made by mcatalan for more information about this part.
 
-P3:
+### P3:
 - This part no longer uses Vagrant but instead uses k3d to create a k3s cluster inside Docker containers.
 - The cluster will have one Server node and two Agent nodes, and the goal is to deploy a simple application (Wil's image) and ArgoCD to manage the application deployment. ArgoCD will be configured to use a GitHub repository as the source for the application manifest and will monitor the main branch for commits to automatically deploy updates.
 - The application and ArgoCD will be exposed using an Ingress controller.
 
-Bonus:
+### Bonus:
 - This part extends P3 by adding Helm to manage the local deployment of Gitlab inside the k3s cluster.
 - Gitlab will be used to host the repository containing the application manifest and ArgoCD will be configured to monitor the Gitlab repository instead of GitHub.
 
+#### About the bonus and resource limitations
+Due to the limited resources of the computers at 42 (8GB RAM), running Gitlab inside the k3s cluster can be quite challenging, if not impossible, on a standard VM hosted on sgoinfre. Our solution to that was to host the VM on a SSD external drive, which significantly improved performance, but that was not enough. We had to tweak Gitlab's configuration to reduce its resource consumption by disabling unnecessary components and limiting the resources allocated to each component.
+While P1, P2, and P3 could be run on a Debian VM, the bonus required a slicker image with less overhead, hence the use of a custom Alpine VM as a base, on which we had to set up a fileswap of 4 GB to compensate and avoid the dreaded OOM killer.
+
 ## Sources and References
-- [k3s Documentation](https://k3s.io/)
-- [k3d Documentation](https://k3d.io/)
-- [ArgoCD Documentation](https://argo-cd.readthedocs.io/en/stable/)
-- [Helm Documentation](https://helm.sh/docs/)
+- [What are clusters, nodes and pods?](https://www.cloudzero.com/blog/kubernetes-node-vs-pod/)
+- [Simple explanation of Kubernetes from Reddit](https://www.reddit.com/r/kubernetes/comments/1e3v1e3/when_to_use_pods_vs_nodes/)
+- [Understanding ArgoCD and GitOps](https://codefresh.io/learn/argo-cd/)
+- [What is Helm, and why use it?](https://helm.sh/docs/intro/quickstart)
 - [Gitlab Documentation](https://docs.gitlab.com/)
 
 ## Special Thanks
