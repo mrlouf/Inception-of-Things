@@ -12,8 +12,9 @@ P3 and the bonus part require Docker to be installed on your machine:
 1. Install [Docker](https://docs.docker.com/get-docker/) on your machine.
 
 ## Project Structure
+<img width="500" height="800" alt="image" src="https://github.com/user-attachments/assets/3f2d1aea-79bd-4fa9-b9ee-294bdb993f18" />
 
-// instert project structure here
+
 
 P1:
 - This part focuses on setting up a simple k3s cluster using Vagrant with one Server node and one Agent node.
