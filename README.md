@@ -22,7 +22,7 @@ P1:
 
 P2:
 - This part reuses the Server node from P1 and requires to create a cluster with 3 Agent nodes.
-- Consult the [Readme file](https://github.com/mrlouf/Inception-of-Things/p2/README.md) made by mcatalan for more information about this part.
+- Consult the [Readme file](https://github.com/mrlouf/Inception-of-Things/tree/main/p2) made by mcatalan for more information about this part.
 
 P3:
 - This part no longer uses Vagrant but instead uses k3d to create a k3s cluster inside Docker containers.
