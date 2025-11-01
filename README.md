@@ -1,38 +1,42 @@
 #  Inception-of-Things
 
-## First steps
+## Overview
+This project aims at giving a small introduction to Kubernetes (k8s) by implementing a serie of micro-infrastructures using k3s, a lightweight Kubernetes distribution and k3d, a tool to run k3s in Docker containers. Each micro-infrastructure will be deployed inside a k3s cluster and will showcase different aspects of Kubernetes, such as deploying applications, configuring networking with Ingress, and managing resources with Helm with the ultimate goal of setting up a complete CI/CD pipeline.
 
-### Installation of Vagrant and Virtualbox
+## Prerequisites
+P1 and P2 require Vagrant and VirtualBox to be installed on your machine:
+1. Install [VirtualBox](https://www.virtualbox.org/wiki/Downloads) on your machine.
+2. Install [Vagrant](https://www.vagrantup.com/downloads) on your machine.
 
-+ Install Vagrant:
+P3 and the bonus part require Docker to be installed on your machine:
+1. Install [Docker](https://docs.docker.com/get-docker/) on your machine.
 
-`wget -O - https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg`<br>
-`echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(grep -oP '(?<=UBUNTU_CODENAME=).*' /etc/os-release || lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list`<br>
-`sudo apt update && sudo apt install vagrant`<br>
+## Project Structure
 
-## Troubleshooting
+// instert project structure here
 
-Sometimes the IP range specified in the private network overlaps a network already in use on the machine, such as a Docker network. This can give the following error:
+P1:
+- This part focuses on setting up a simple k3s cluster using Vagrant with one Server node and one Agent node.
+- The subject requires to set a specific IP for each node and set them up in the right mode (Server/Agent).
 
-> ==> nponchonS: Clearing any previously set network interfaces...<br>
-> The specified host network collides with a non-hostonly network!<br>
-> This will cause your specified IP to be inaccessible. Please change<br>
-> the IP or name of your host only network so that it no longer matches that of<br>
-> a bridged or non-hostonly network.<br>
-><br>
-> Bridged Network Address: '192.168.56.0'<br>
-> Host-only Network 'br-d2c21f32a5cf': '192.168.56.0'<br>
+P2:
+- This part reuses the Server node from P1 and requires to create a cluster with 3 Agent nodes.
 
-The command `ip a` gives us the confirmation that the IP range is being used by another device:
+P3:
+- This part no longer uses Vagrant but instead uses k3d to create a k3s cluster inside Docker containers.
+- The cluster will have one Server node and two Agent nodes, and the goal is to deploy a simple application (Wil's image) and ArgoCD to manage the application deployment. ArgoCD will be configured to use a GitHub repository as the source for the application manifest and will monitor the main branch for commits to automatically deploy updates.
+- The application and ArgoCD will be exposed using an Ingress controller.
 
-> nponchon@nponchon-VirtualBox:~/Desktop/Inception-of-Things/p1$ ip a<br>
-> [...]<br>
-> 4: **br-d2c21f32a5cf**: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc noqueue state DOWN group default <br>
->     link/ether 06:80:b1:9e:f7:6a brd ff:ff:ff:ff:ff:ff<br>
->     inet **192.168.56.1/24** brd 192.168.56.255 scope global br-d2c21f32a5cf<br>
->        valid_lft forever preferred_lft forever<br>
-> [...]<br>
+Bonus:
+- This part extends P3 by adding Helm to manage the local deployment of Gitlab inside the k3s cluster.
+- Gitlab will be used to host the repository containing the application manifest and ArgoCD will be configured to monitor the Gitlab repository instead of GitHub.
 
-You can run `docker network ls` to check whether Docker is using the network or not, and then remove it with `docker network rm br-d2c21f32a5cf`.
-Another way to clear the IP range is to use the command `sudo ip link delete <network>`
+## Sources and References
+- [k3s Documentation](https://k3s.io/)
+- [k3d Documentation](https://k3d.io/)
+- [ArgoCD Documentation](https://argo-cd.readthedocs.io/en/stable/)
+- [Helm Documentation](https://helm.sh/docs/)
+- [Gitlab Documentation](https://docs.gitlab.com/)
 
+## Special Thanks
+Special thanks to [Fabio](https://github.com/fabbbiodc) for the custom VM used for the bonus, without which setting up Gitlab would have been impossible on 42's limited computers.
