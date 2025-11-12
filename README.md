@@ -6,7 +6,7 @@ This project aims at giving a small introduction to Kubernetes (k8s) by implemen
 ## What is Kubernetes?
 In simple terms, Kubernetes is an open-source platform designed to automate the deployment, scaling, and operation of application containers.
 If you are like me and analogies help you understand complex and abstract concepts, here's a good one: 
->> Here's an analogy: You can think of a container orchestrator (like Kubernetes ) as you would a conductor for an orchestra, says Dave Egts, chief technologist, North America Public Sector, Red Hat. “In the same way a conductor would say how many trumpets are needed, which ones play first trumpet, and how loud each should play," Egts explains, "a container orchestrator would say how many web server front end containers are needed, what they serve, and how many resources are to be dedicated to each one."<br>
+>> You can think of a container orchestrator (like Kubernetes ) as you would a conductor for an orchestra, says Dave Egts, chief technologist, North America Public Sector, Red Hat. “In the same way a conductor would say how many trumpets are needed, which ones play first trumpet, and how loud each should play," Egts explains, "a container orchestrator would say how many web server front end containers are needed, what they serve, and how many resources are to be dedicated to each one."<br>
 
 (Quoted from this [article](https://www.redhat.com/en/topics/containers/what-is-kubernetes)).
 
@@ -33,12 +33,15 @@ P3 and the bonus part require Docker to be installed on your machine:
 
 ### P3:
 - This part no longer uses Vagrant but instead uses k3d to create a k3s cluster inside Docker containers.
-- The cluster will have one Server node and two Agent nodes, and the goal is to deploy a simple application (Wil's image) and ArgoCD to manage the application deployment. ArgoCD will be configured to use a GitHub repository as the source for the application manifest and will monitor the main branch for commits to automatically deploy updates.
-- The application and ArgoCD will be exposed using an Ingress controller.
+- The cluster will have one Server node and two Agent nodes, and the goal is to deploy a simple application (Wil's image) and ArgoCD to manage the application deployment.
+- ArgoCD is a GitOps continuous delivery tool for Kubernetes that automates the deployment of the desired application states in the specified target environments. It continuously monitors a specific Git repository for changes (be it a specific commit or branch) and applies those changes to the Kubernetes cluster, ensuring that the cluster's state matches the desired state defined in the Git repository. In this part, we created a GitHub repository containing the manifest files for both the application, and configured ArgoCD to monitor that repository and automatically deploy the application whenever changes are pushed to the repository.
+- The application and ArgoCD are exposed using an Ingress controller.
 
 ### Bonus:
-- This part extends P3 by adding Helm to manage the local deployment of Gitlab inside the k3s cluster.
+- This part extends P3 by adding Helm to manage the local deployment of Gitlab inside the k3s cluster. Gitlab is a web-based DevOps tool that provides a Git repository manager, CI/CD pipeline features, and more.
+- Helm is a package manager for Kubernetes that simplifies the deployment and management of applications by using pre-configured charts. You can think of Helm as the equivalent of apt for Kubernetes.
 - Gitlab will be used to host the repository containing the application manifest and ArgoCD will be configured to monitor the Gitlab repository instead of GitHub.
+- The Gitlab instance is exposed using an Ingress controller, just like ArgoCD and the application in P3, to make it accessible from outside the cluster.
 
 #### About the bonus and resource limitations
 Due to the limited resources of the computers at 42 (8GB RAM), running Gitlab inside the k3s cluster can be quite challenging, if not impossible, on a standard VM hosted on sgoinfre. Our solution to that was to host the VM on a SSD external drive, which significantly improved performance, but that was not enough. We had to tweak Gitlab's configuration to reduce its resource consumption by disabling unnecessary components and limiting the resources allocated to each component.
